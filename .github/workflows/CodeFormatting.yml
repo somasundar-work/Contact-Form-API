@@ -25,9 +25,6 @@ jobs:
       - name: Restore .NET Tools
         run: dotnet tool restore
 
-      - name: Run CSharpier Check
-        run: dotnet csharpier --check .
-
       - name: Run CSharpier Formatting
         if: ${{ github.event.inputs.format == 'true' }}
         run: dotnet csharpier .
@@ -46,3 +43,6 @@ jobs:
           else
             git push origin HEAD:${{ github.ref_name }}
           fi
+
+      - name: Run CSharpier Check
+        run: dotnet csharpier --check .
