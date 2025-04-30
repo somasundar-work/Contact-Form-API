@@ -16,7 +16,7 @@ on:
 
 jobs:
   lint:
-    name: Checks
+    name: Code Formatting
     uses: ./.github/workflows/CodeFormatting.yml
 
   Checks:
