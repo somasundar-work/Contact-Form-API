@@ -26,23 +26,17 @@ jobs:
         run: dotnet tool restore
 
       - name: Run CSharpier Formatting
-        if: ${{ github.event.inputs.format == 'true' }}
+        if: ${{ github.event.inputs.format == 'true' && github.ref != 'refs/heads/main' }}
         run: dotnet csharpier .
 
       - name: Commit and Push Changes
-        if: ${{ github.event.inputs.format == 'true' }}
+        if: ${{ github.event.inputs.format == 'true' && github.ref != 'refs/heads/main' }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "Apply CSharpier formatting"
-          if [ "${{ github.ref_name }}" == "main" ]; then
-            git checkout -b csharpier-formatting
-            git push origin csharpier-formatting
-            gh pr create --title "Apply CSharpier formatting" --body "This PR applies CSharpier formatting to the codebase."
-          else
-            git push origin HEAD:${{ github.ref_name }}
-          fi
+          git push origin HEAD:${{ github.ref_name }}
 
       - name: Run CSharpier Check
         run: dotnet csharpier --check .
