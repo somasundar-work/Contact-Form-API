@@ -54,8 +54,13 @@ public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
         var bodyBuilder = new BodyBuilder { TextBody = "Hi, Hello", HtmlBody = "<h1>hi, Hello</h1>" };
         message.Body = bodyBuilder.ToMessageBody();
         using var client = new SmtpClient();
-        client.Connect(smtpInfo.GetValue<string>("Host"), smtpInfo.GetValue<int>("Port"), SecureSocketOptions.StartTls);
-        client.Authenticate(smtpInfo.GetValue<string>("Email"), smtpInfo.GetValue<string>("Password"));
+        var host = smtpInfo.GetValue<string>("Host");
+        var port = smtpInfo.GetValue<int>("Port");
+        await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
+        var Email = smtpInfo.GetValue<string>("Email");
+        var Password = smtpInfo.GetValue<string>("Password");
+        await client.AuthenticateAsync(Email, Password);
+        _logger.LogInformation("Sending email to {0} from {1}", req.Email, smtpInfo.GetValue<string>("Email"));
         await client.SendAsync(message);
         client.Disconnect(true);
         return true;
