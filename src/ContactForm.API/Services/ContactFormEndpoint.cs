@@ -1,7 +1,10 @@
+using System.Text.Json;
+using ContactForm.API.Constants;
 using ContactForm.API.Models;
 using FastEndpoints;
 using MailKit.Net.Smtp;
 using MailKit.Security;
+using Microsoft.Extensions.Options;
 using MimeKit;
 
 namespace ContactForm.API.Services;
@@ -9,12 +12,18 @@ namespace ContactForm.API.Services;
 public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
 {
     private readonly ILogger<ContactFormEndpoint> _logger;
-    private readonly IConfiguration _config;
+    private readonly SmtpInfoOptions _smtpInfo;
+    private readonly ProfileOptions _profile;
 
-    public ContactFormEndpoint(ILogger<ContactFormEndpoint> logger, IConfiguration configuration)
+    public ContactFormEndpoint(
+        ILogger<ContactFormEndpoint> logger,
+        IOptions<SmtpInfoOptions> smtpInfo,
+        IOptions<ProfileOptions> profile
+    )
     {
         _logger = logger;
-        _config = configuration;
+        _smtpInfo = smtpInfo.Value;
+        _profile = profile.Value;
     }
 
     public override void Configure()
@@ -46,59 +55,57 @@ public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
 
     private async Task<bool> SendResponseAsync(ContactFormRequest req)
     {
-        var smtpInfo = _config.GetSection("smtp");
+        _logger.LogInformation("Sending email to {0} from {1}", req.Email, _smtpInfo.Email);
+        _logger.LogInformation("SMTP Info: {0}", JsonSerializer.Serialize(_smtpInfo));
+        _logger.LogInformation("Request: {0}", JsonSerializer.Serialize(req));
         var message = new MimeMessage();
-        message.From.Add(new MailboxAddress(smtpInfo.GetValue<string>("Name"), smtpInfo.GetValue<string>("Email")));
+        message.From.Add(new MailboxAddress(_smtpInfo.Name, _smtpInfo.Email));
         message.To.Add(new MailboxAddress(req.Name, req.Email));
+        message.Bcc.Add(new MailboxAddress(_profile.Name, _profile.Email));
         message.Subject = "Thank you for reaching out!";
-        var bodyBuilder = new BodyBuilder
-        {
-            TextBody =
-                @$"
-                    Dear {req.Name},
-
-                    Thank you for reaching out! I truly appreciate your interest and would love to assist you with your queries.
-
-                    I will review your submission and get back to you shortly with more information. If your inquiry is urgent, please feel free to reach me at [your email address] or [your phone number].
-
-                    Looking forward to speaking with you soon!
-
-                    Best regards,
-
-                    {smtpInfo.GetValue<string>("Name")}  
-                    [Your Job Title]  
-                    [Your Portfolio Website]  
-                    [Your Social Media Links]  
-                    [Your Contact Information]  
-                ",
-            HtmlBody =
-                @$"
-                    <html>
-                        <body>
-                            <p>Dear {req.Name},</p>
-                            <p>Thank you for reaching out! I truly appreciate your interest and would love to assist you with your queries.</p>
-                            <p>I will review your submission and get back to you shortly with more information. If your inquiry is urgent, please feel free to reach me at [your email address] or [your phone number].</p>
-                            <p>Looking forward to speaking with you soon!</p>
-                            <p>Best regards,</p>
-                            <p>{smtpInfo.GetValue<string>("Name")}</p>
-                            <p>[Your Job Title]</p>
-                            <p>[Your Portfolio Website]</p>
-                            <p>[Your Social Media Links]</p>
-                            <p>[Your Contact Information]</p>
-                        </body>
-                    </html>",
-        };
+        var textBodyTemplate = await GetTemplateAsync(Constant.Template.ContactFormResponsePlainText);
+        var htmlBodyTemplate = await GetTemplateAsync(Constant.Template.ContactFormResponseHtml);
+        var textBody = ReplacePlaceholders(textBodyTemplate, req);
+        var htmlBody = ReplacePlaceholders(htmlBodyTemplate, req);
+        var bodyBuilder = new BodyBuilder { TextBody = textBody, HtmlBody = htmlBody };
         message.Body = bodyBuilder.ToMessageBody();
         using var client = new SmtpClient();
-        var host = smtpInfo.GetValue<string>("Host");
-        var port = smtpInfo.GetValue<int>("Port");
-        await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
-        var Email = smtpInfo.GetValue<string>("Email");
-        var Password = smtpInfo.GetValue<string>("Password");
-        await client.AuthenticateAsync(Email, Password);
-        _logger.LogInformation("Sending email to {0} from {1}", req.Email, smtpInfo.GetValue<string>("Email"));
+        await client.ConnectAsync(_smtpInfo.Host, _smtpInfo.Port, SecureSocketOptions.StartTls);
+        await client.AuthenticateAsync(_smtpInfo.Email, _smtpInfo.Password);
         await client.SendAsync(message);
         client.Disconnect(true);
         return true;
+    }
+
+    private static async Task<string> GetTemplateAsync(string templateName)
+    {
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", templateName);
+        if (!File.Exists(templatePath))
+        {
+            throw new FileNotFoundException($"Template file not found: {templatePath}");
+        }
+        using var reader = new StreamReader(templatePath);
+        return await reader.ReadToEndAsync();
+    }
+
+    private string ReplacePlaceholders(string template, ContactFormRequest req)
+    {
+        _logger.LogInformation("Replacing placeholders in template");
+        _logger.LogInformation("Template: {0}", template);
+        _logger.LogInformation("Request: {0}", JsonSerializer.Serialize(req));
+        _logger.LogInformation("Profile: {0}", JsonSerializer.Serialize(_profile));
+        return template
+            .Replace(Constant.SubmitterPlaceholder.Name, req.Name)
+            .Replace(Constant.SubmitterPlaceholder.Email, req.Email)
+            .Replace(Constant.SubmitterPlaceholder.Message, req.Message)
+            .Replace(Constant.ProfilePlaceholder.Name, _profile.Name)
+            .Replace(Constant.ProfilePlaceholder.Email, _profile.Email)
+            .Replace(Constant.ProfilePlaceholder.Contact, _profile.Contact)
+            .Replace(Constant.ProfilePlaceholder.Website, _profile.Website)
+            .Replace(Constant.ProfilePlaceholder.Github, _profile.Github)
+            .Replace(Constant.ProfilePlaceholder.LinkedIn, _profile.LinkedIn)
+            .Replace(Constant.ProfilePlaceholder.Whatsapp, _profile.Whatsapp)
+            .Replace(Constant.ProfilePlaceholder.Address, _profile.Address);
+        ;
     }
 }

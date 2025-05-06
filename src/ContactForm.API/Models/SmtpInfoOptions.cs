@@ -1,6 +1,6 @@
 namespace ContactForm.API.Models;
 
-public class SmtpInfo
+public class SmtpInfoOptions
 {
     public required string Host { get; set; }
     public required int Port { get; set; }
