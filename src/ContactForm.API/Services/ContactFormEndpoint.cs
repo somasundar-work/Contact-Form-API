@@ -52,10 +52,6 @@ public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
         _logger.LogInformation("Handling request for ContactFormEndpoint.");
         try
         {
-            _logger.LogInformation("Saving request...");
-            await SaveRequestAsync(req);
-            _logger.LogInformation("Request saved successfully.");
-
             _logger.LogInformation("Sending response...");
             await SendResponseAsync(req);
             _logger.LogInformation("Response sent successfully.");
@@ -70,14 +66,6 @@ public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
             var result = Result<string>.Failure("An error occurred while processing your request.");
             await SendAsync(result, cancellation: ct);
         }
-    }
-
-    private async Task<bool> SaveRequestAsync(ContactFormRequest req)
-    {
-        _logger.LogInformation("Simulating saving request to database.");
-        await Task.Delay(100);
-        _logger.LogInformation("Request saved to database.");
-        return true;
     }
 
     private async Task<bool> SendResponseAsync(ContactFormRequest req)
