@@ -63,8 +63,8 @@ public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
         message.To.Add(new MailboxAddress(req.Name, req.Email));
         message.Bcc.Add(new MailboxAddress(_profile.Name, _profile.Email));
         message.Subject = "Thank you for reaching out!";
-        var textBodyTemplate = await GetTemplateAsync(Constant.Template.ContactFormResponsePlainText);
-        var htmlBodyTemplate = await GetTemplateAsync(Constant.Template.ContactFormResponseHtml);
+        var textBodyTemplate = await GetTemplateAsync(AppConstant.Template.ContactFormResponsePlainText);
+        var htmlBodyTemplate = await GetTemplateAsync(AppConstant.Template.ContactFormResponseHtml);
         var textBody = ReplacePlaceholders(textBodyTemplate, req);
         var htmlBody = ReplacePlaceholders(htmlBodyTemplate, req);
         var bodyBuilder = new BodyBuilder { TextBody = textBody, HtmlBody = htmlBody };
@@ -95,17 +95,17 @@ public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
         _logger.LogInformation("Request: {0}", JsonSerializer.Serialize(req));
         _logger.LogInformation("Profile: {0}", JsonSerializer.Serialize(_profile));
         return template
-            .Replace(Constant.SubmitterPlaceholder.Name, req.Name)
-            .Replace(Constant.SubmitterPlaceholder.Email, req.Email)
-            .Replace(Constant.SubmitterPlaceholder.Message, req.Message)
-            .Replace(Constant.ProfilePlaceholder.Name, _profile.Name)
-            .Replace(Constant.ProfilePlaceholder.Email, _profile.Email)
-            .Replace(Constant.ProfilePlaceholder.Contact, _profile.Contact)
-            .Replace(Constant.ProfilePlaceholder.Website, _profile.Website)
-            .Replace(Constant.ProfilePlaceholder.Github, _profile.Github)
-            .Replace(Constant.ProfilePlaceholder.LinkedIn, _profile.LinkedIn)
-            .Replace(Constant.ProfilePlaceholder.Whatsapp, _profile.Whatsapp)
-            .Replace(Constant.ProfilePlaceholder.Address, _profile.Address);
+            .Replace(AppConstant.SubmitterPlaceholder.Name, req.Name)
+            .Replace(AppConstant.SubmitterPlaceholder.Email, req.Email)
+            .Replace(AppConstant.SubmitterPlaceholder.Message, req.Message)
+            .Replace(AppConstant.ProfilePlaceholder.Name, _profile.Name)
+            .Replace(AppConstant.ProfilePlaceholder.Email, _profile.Email)
+            .Replace(AppConstant.ProfilePlaceholder.Contact, _profile.Contact)
+            .Replace(AppConstant.ProfilePlaceholder.Website, _profile.Website)
+            .Replace(AppConstant.ProfilePlaceholder.Github, _profile.Github)
+            .Replace(AppConstant.ProfilePlaceholder.LinkedIn, _profile.LinkedIn)
+            .Replace(AppConstant.ProfilePlaceholder.Whatsapp, _profile.Whatsapp)
+            .Replace(AppConstant.ProfilePlaceholder.Address, _profile.Address);
         ;
     }
 }

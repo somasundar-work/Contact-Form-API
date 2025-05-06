@@ -1,6 +1,6 @@
 namespace ContactForm.API.Constants;
 
-public static class Constant
+public static class AppConstant
 {
     public static class SubmitterPlaceholder
     {
@@ -26,4 +26,6 @@ public static class Constant
         public const string ContactFormResponseHtml = "ContactFormResponse.html";
         public const string ContactFormResponsePlainText = "ContactFormResponse.txt";
     }
+
+    public const string CorsPolicyName = "PrivateCorsPolicy";
 }

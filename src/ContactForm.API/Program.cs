@@ -1,15 +1,14 @@
-using ContactForm.API.Models;
+using ContactForm.API.Constants;
+using ContactForm.API.Extensions;
 using FastEndpoints;
-using Microsoft.CodeAnalysis.Options;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddFastEndpoints();
-builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.Configure<SmtpInfoOptions>(builder.Configuration.GetSection("smtp"));
-builder.Services.Configure<ProfileOptions>(builder.Configuration.GetSection("profile"));
+builder.Services.AddHealthChecks();
+builder.Services.ConfigureAppCors(builder.Configuration);
+builder.Services.ConfigureAppOptions(builder.Configuration);
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
@@ -21,7 +20,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// app.UseHttpsRedirection();
+app.UseCors(AppConstant.CorsPolicyName);
+
+app.UseHttpsRedirection();
 
 app.MapGet("/", () => "Contact Form API is running!");
 
