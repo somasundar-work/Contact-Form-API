@@ -38,7 +38,7 @@ public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
         Verbs(Http.POST);
         Routes("/api/contact");
         AllowAnonymous();
-        Version(1, 0);
+        Version(1, 0).StartingRelease(1).DeprecateAt(2);
         Description(x =>
             x.Produces<string>(StatusCodes.Status200OK)
                 .Produces<string>(StatusCodes.Status400BadRequest)
