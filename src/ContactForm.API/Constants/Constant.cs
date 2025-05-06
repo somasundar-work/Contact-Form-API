@@ -2,6 +2,8 @@ namespace ContactForm.API.Constants;
 
 public static class AppConstant
 {
+    public const string Subject = "Thank you for reaching out!";
+
     public static class SubmitterPlaceholder
     {
         public const string Name = "#SUBMITTER_NAME#";
