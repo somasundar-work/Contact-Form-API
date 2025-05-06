@@ -1,15 +1,20 @@
 using ContactForm.API.Models;
 using FastEndpoints;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 
 namespace ContactForm.API.Services;
 
 public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
 {
     private readonly ILogger<ContactFormEndpoint> _logger;
+    private readonly IConfiguration _config;
 
-    public ContactFormEndpoint(ILogger<ContactFormEndpoint> logger)
+    public ContactFormEndpoint(ILogger<ContactFormEndpoint> logger, IConfiguration configuration)
     {
         _logger = logger;
+        _config = configuration;
     }
 
     public override void Configure()
@@ -41,12 +46,18 @@ public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
 
     private async Task<bool> SendResponseAsync(ContactFormRequest req)
     {
-        await SendEmailAsync(req);
+        var smtpInfo = _config.GetSection("smtp");
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(smtpInfo.GetValue<string>("Name"), smtpInfo.GetValue<string>("Email")));
+        message.To.Add(new MailboxAddress(req.Name, req.Email));
+        message.Subject = "";
+        var bodyBuilder = new BodyBuilder { TextBody = "Hi, Hello", HtmlBody = "<h1>hi, Hello</h1>" };
+        message.Body = bodyBuilder.ToMessageBody();
+        using var client = new SmtpClient();
+        client.Connect(smtpInfo.GetValue<string>("Host"), smtpInfo.GetValue<int>("Port"), SecureSocketOptions.StartTls);
+        client.Authenticate(smtpInfo.GetValue<string>("Email"), smtpInfo.GetValue<string>("Password"));
+        await client.SendAsync(message);
+        client.Disconnect(true);
         return true;
-    }
-
-    private Task<bool> SendEmailAsync(ContactFormRequest req)
-    {
-        return Task.FromResult(true);
     }
 }
