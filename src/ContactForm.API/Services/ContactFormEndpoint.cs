@@ -38,7 +38,7 @@ public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
         Verbs(Http.POST);
         Routes("/api/contact");
         AllowAnonymous();
-        Version(1, 0);
+        Version(1, 0).StartingRelease(1).DeprecateAt(2);
         Description(x =>
             x.Produces<string>(StatusCodes.Status200OK)
                 .Produces<string>(StatusCodes.Status400BadRequest)
@@ -52,10 +52,6 @@ public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
         _logger.LogInformation("Handling request for ContactFormEndpoint.");
         try
         {
-            _logger.LogInformation("Saving request...");
-            await SaveRequestAsync(req);
-            _logger.LogInformation("Request saved successfully.");
-
             _logger.LogInformation("Sending response...");
             await SendResponseAsync(req);
             _logger.LogInformation("Response sent successfully.");
@@ -72,18 +68,9 @@ public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
         }
     }
 
-    private async Task<bool> SaveRequestAsync(ContactFormRequest req)
-    {
-        _logger.LogInformation("Simulating saving request to database.");
-        await Task.Delay(100);
-        _logger.LogInformation("Request saved to database.");
-        return true;
-    }
-
     private async Task<bool> SendResponseAsync(ContactFormRequest req)
     {
         _logger.LogInformation("Preparing to send email to {0} from {1}", req.Email, _smtpInfo.Email);
-        _logger.LogInformation("SMTP Info: {0}", JsonSerializer.Serialize(_smtpInfo));
         _logger.LogInformation("Request: {0}", JsonSerializer.Serialize(req));
 
         var message = new MimeMessage();
