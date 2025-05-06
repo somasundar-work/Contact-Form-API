@@ -83,7 +83,6 @@ public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
     private async Task<bool> SendResponseAsync(ContactFormRequest req)
     {
         _logger.LogInformation("Preparing to send email to {0} from {1}", req.Email, _smtpInfo.Email);
-        _logger.LogInformation("SMTP Info: {0}", JsonSerializer.Serialize(_smtpInfo));
         _logger.LogInformation("Request: {0}", JsonSerializer.Serialize(req));
 
         var message = new MimeMessage();
