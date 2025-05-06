@@ -38,11 +38,11 @@ jobs:
       - name: Begin SonarCloud Analysis
         run: |
           dotnet sonarscanner begin \
-            /k:"somasundar-work_Soms.Dev.Cryptography" \
+            /k:"somasundar-work_Contact-Form-API" \
             /o:"somasundar-work" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" \
-            /d:sonar.exclusions="**/Soms.Dev.Cryptography.Tests/**" \
+            /d:sonar.exclusions="**/**.Tests/**" \
             /d:sonar.verbose=true \
             /d:sonar.scanner.scanAll=false
         env:
