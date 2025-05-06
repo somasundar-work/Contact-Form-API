@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddFastEndpoints();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHealthChecks();
+builder.Services.AddResponseCompression();
 builder.Services.ConfigureAppCors(builder.Configuration);
 builder.Services.ConfigureAppOptions(builder.Configuration);
 builder.Services.AddApiVersioning(options =>
@@ -56,6 +57,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseResponseCompression();
 
 app.UseRateLimiter();
 
