@@ -50,8 +50,44 @@ public class ContactFormEndpoint : Endpoint<ContactFormRequest, Result<string>>
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(smtpInfo.GetValue<string>("Name"), smtpInfo.GetValue<string>("Email")));
         message.To.Add(new MailboxAddress(req.Name, req.Email));
-        message.Subject = "";
-        var bodyBuilder = new BodyBuilder { TextBody = "Hi, Hello", HtmlBody = "<h1>hi, Hello</h1>" };
+        message.Subject = "Thank you for reaching out!";
+        var bodyBuilder = new BodyBuilder
+        {
+            TextBody =
+                @$"
+                    Dear {req.Name},
+
+                    Thank you for reaching out! I truly appreciate your interest and would love to assist you with your queries.
+
+                    I will review your submission and get back to you shortly with more information. If your inquiry is urgent, please feel free to reach me at [your email address] or [your phone number].
+
+                    Looking forward to speaking with you soon!
+
+                    Best regards,
+
+                    {smtpInfo.GetValue<string>("Name")}  
+                    [Your Job Title]  
+                    [Your Portfolio Website]  
+                    [Your Social Media Links]  
+                    [Your Contact Information]  
+                ",
+            HtmlBody =
+                @$"
+                    <html>
+                        <body>
+                            <p>Dear {req.Name},</p>
+                            <p>Thank you for reaching out! I truly appreciate your interest and would love to assist you with your queries.</p>
+                            <p>I will review your submission and get back to you shortly with more information. If your inquiry is urgent, please feel free to reach me at [your email address] or [your phone number].</p>
+                            <p>Looking forward to speaking with you soon!</p>
+                            <p>Best regards,</p>
+                            <p>{smtpInfo.GetValue<string>("Name")}</p>
+                            <p>[Your Job Title]</p>
+                            <p>[Your Portfolio Website]</p>
+                            <p>[Your Social Media Links]</p>
+                            <p>[Your Contact Information]</p>
+                        </body>
+                    </html>",
+        };
         message.Body = bodyBuilder.ToMessageBody();
         using var client = new SmtpClient();
         var host = smtpInfo.GetValue<string>("Host");
