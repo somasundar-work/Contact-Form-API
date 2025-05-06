@@ -1,0 +1,65 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+jobs:
+  build-and-analyze:
+    name: Build, Test, and Analyze with SonarCloud
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.x"
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Install SonarScanner & coverage tool
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          dotnet tool install --global dotnet-coverage
+
+      - name: Add tool path to environment
+        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Begin SonarCloud Analysis
+        run: |
+          dotnet sonarscanner begin \
+            /k:"somasundar-work_Soms.Dev.Cryptography" \
+            /o:"somasundar-work" \
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" \
+            /d:sonar.exclusions="**/Soms.Dev.Cryptography.Tests/**" \
+            /d:sonar.verbose=true \
+            /d:sonar.scanner.scanAll=false
+        env:
+          DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: true
+
+      - name: Build the project
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run tests with coverage
+        run: |
+          dotnet build --no-incremental
+          dotnet-coverage collect 'dotnet test' -f xml  -o 'coverage.xml'
+
+      - name: End SonarCloud Analysis
+        run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Upload coverage report
+        run: |
+          report_path=$(find . -type f -name 'coverage.xml' | head -n 1)
+          echo "Coverage report found at: $report_path"
