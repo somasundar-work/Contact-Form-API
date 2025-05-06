@@ -22,6 +22,19 @@ builder.Services.AddApiVersioning(options =>
 });
 builder.Services.AddRateLimiter(options =>
 {
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        // Custom rejection handling logic
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.Headers["Retry-After"] = "60";
+
+        await context.HttpContext.Response.WriteAsync(
+            "Rate limit exceeded. Please try again later.",
+            cancellationToken
+        );
+        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning("Rate limit exceeded for IP: {IpAddress}", context.HttpContext.Connection.RemoteIpAddress);
+    };
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
