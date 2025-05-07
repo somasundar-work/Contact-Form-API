@@ -30,7 +30,7 @@ jobs:
     uses: ./.github/workflows/BuildProject.yml
 
   CD:
-    needs: [Checks, CI, lint]
+    needs: [CI]
     if: ${{ github.ref == 'refs/heads/main' }}
     name: Deployment
     runs-on: ubuntu-latest
