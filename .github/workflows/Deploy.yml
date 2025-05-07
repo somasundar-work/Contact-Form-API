@@ -84,7 +84,6 @@ jobs:
         with:
           tag_name: ${{ steps.versioning.outputs.tag }}
           name: Release ${{ steps.versioning.outputs.version }}
-          files: 
-            - publish.zip
+          files: publish.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
