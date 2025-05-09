@@ -30,7 +30,7 @@ jobs:
     uses: ./.github/workflows/BuildProject.yml
 
   CD:
-    needs: [Checks, CI, lint]
+    needs: [CI]
     if: ${{ github.ref == 'refs/heads/main' }}
     name: Deployment
     runs-on: ubuntu-latest
@@ -70,20 +70,20 @@ jobs:
         run: dotnet publish --configuration Release --output ./publish
 
       - name: Archive Published Files
-        run: zip -r publish.zip ./publish
+        run: zip -r ContactForm-API-${{ steps.versioning.outputs.version }}.zip ./publish
 
-      - name: Tag Release
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git tag ${{ steps.versioning.outputs.tag }}
-          git push origin ${{ steps.versioning.outputs.tag }}
+      # - name: Tag Release
+      #   run: |
+      #     git config user.name "github-actions"
+      #     git config user.email "github-actions@github.com"
+      #     git tag ${{ steps.versioning.outputs.tag }}
+      #     git push origin ${{ steps.versioning.outputs.tag }}
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.versioning.outputs.tag }}
-          name: Release ${{ steps.versioning.outputs.version }}
-          files: publish.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Create GitHub Release
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     tag_name: ${{ steps.versioning.outputs.tag }}
+      #     name: Release ${{ steps.versioning.outputs.version }}
+      #     files: publish.zip
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
